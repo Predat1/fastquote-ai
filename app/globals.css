@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617;
+  --background: #0a0a0c;
   --foreground: #f8fafc;
+  --primary: #fbbf24;
+  --secondary: #1e293b;
+  --accent: #3b82f6;
+}
+
+@theme {
+  --color-primary: #fbbf24;
+  --color-secondary: #1e293b;
+  --color-accent: #3b82f6;
 }
 
 body {
@@ -10,13 +19,25 @@ body {
   color: var(--foreground);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Motif de chantier subtil (hachures) */
+.construction-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(251, 191, 36, 0.03) 0px,
+    rgba(251, 191, 36, 0.03) 10px,
+    transparent 10px,
+    transparent 20px
+  );
 }
 
 .glass-card {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 17, 20, 0.8);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 .gradient-text {

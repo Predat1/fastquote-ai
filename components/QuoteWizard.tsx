@@ -104,18 +104,20 @@ export default function QuoteWizard() {
   return (
     <div className="w-full max-w-2xl mx-auto">
       {/* Progress Bar */}
-      <div className="flex justify-between mb-12">
+      <div className="flex justify-between mb-12 px-4">
         {(["photos", "description", "review", "finalize"] as Step[]).map((s, i) => (
-          <div key={s} className="flex items-center">
+          <div key={s} className="flex items-center flex-1 last:flex-none">
             <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                step === s ? "border-amber-500 bg-amber-500/10 text-amber-500" : 
+              className={`w-12 h-12 rounded-xl flex items-center justify-center border-4 transition-all ${
+                step === s ? "border-primary bg-primary/20 text-primary shadow-[0_0_15px_rgba(251,191,36,0.3)]" : 
                 i < ["photos", "description", "review", "finalize"].indexOf(step) ? "border-green-500 bg-green-500 text-white" : "border-white/10 text-white/30"
               }`}
             >
-              {i < ["photos", "description", "review", "finalize"].indexOf(step) ? <Check className="w-5 h-5" /> : i + 1}
+              {i < ["photos", "description", "review", "finalize"].indexOf(step) ? <Check className="w-6 h-6" strokeWidth={3} /> : <span className="font-black text-lg">{i + 1}</span>}
             </div>
-            {i < 3 && <div className={`w-12 h-0.5 mx-2 ${i < ["photos", "description", "review", "finalize"].indexOf(step) ? "bg-green-500" : "bg-white/10"}`} />}
+            {i < 3 && <div className={`flex-1 h-2 mx-2 rounded-full overflow-hidden ${i < ["photos", "description", "review", "finalize"].indexOf(step) ? "bg-green-500" : "bg-white/5"}`}>
+               {i === ["photos", "description", "review", "finalize"].indexOf(step) && <div className="h-full w-full construction-pattern opacity-50 animate-pulse" />}
+            </div>}
           </div>
         ))}
       </div>
