@@ -73,6 +73,64 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Expertise Section - New */}
+      <section className="py-32 bg-construction relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
+          <div className="absolute top-0 right-0 w-full h-full construction-pattern" />
+        </div>
+
+        <div className="container px-6 mx-auto relative z-10">
+          <div className="max-w-3xl mb-20">
+            <h2 className="text-sm font-black uppercase tracking-[0.4em] text-primary mb-6">Expertise & Vision</h2>
+            <h3 className="text-4xl md:text-6xl font-black text-white uppercase leading-[1.1]">
+              L'IA transforme la construction <br />
+              <span className="text-slate-500">en puissance brute</span>
+            </h3>
+          </div>
+
+          <div className="grid gap-12 md:grid-cols-2">
+            <div className="space-y-12">
+              {[
+                { 
+                  title: "Optimisation des Coûts", 
+                  desc: "Grâce à la modélisation prédictive, FastQuote AI anticipe les besoins en matériaux et limite le gaspillage sur vos chantiers." 
+                },
+                { 
+                  title: "Sécurité & Risques", 
+                  desc: "L'analyse automatique des situations permet d'anticiper les goulots d'étranglement et les incidents de planification." 
+                }
+              ].map((item, i) => (
+                <div key={i} className="flex gap-8 group">
+                  <div className="text-4xl font-black text-primary/20 group-hover:text-primary transition-colors">0{i+1}</div>
+                  <div>
+                    <h4 className="text-2xl font-black text-white uppercase mb-4">{item.title}</h4>
+                    <p className="text-slate-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-12 glass-card rounded-3xl border-2 border-primary/20 relative">
+              <div className="absolute -top-4 -right-4 px-6 py-2 bg-primary text-primary-foreground font-black uppercase text-xs tracking-widest rounded-lg shadow-xl">
+                Bénéfice Clé
+              </div>
+              <h4 className="text-3xl font-black text-white uppercase mb-8">Gain de Productivité</h4>
+              <p className="text-slate-400 leading-relaxed mb-8 text-lg">
+                En automatisant les tâches administratives chronophages comme la génération de devis et l'analyse documentaire, 
+                vous réduisez radicalement le temps passé devant un écran pour vous concentrer sur le terrain.
+              </p>
+              <ul className="space-y-4">
+                {["Réduction des erreurs de chiffrage", "Gestion optimisée des ressources", "Délais de réponse client divisés par 5"].map((point, j) => (
+                  <li key={j} className="flex items-center gap-3 text-white font-bold italic">
+                    <Check className="w-5 h-5 text-primary" strokeWidth={4} /> {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-24 border-t border-white/5">
         <div className="container px-6 mx-auto">
