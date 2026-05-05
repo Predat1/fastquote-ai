@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Mic, Type, ArrowRight, ArrowLeft, Check, Plus, Trash2, Loader2 } from "lucide-react";
+import { Camera, Mic, Type, ArrowRight, ArrowLeft, Check, Plus, Trash2, Loader2, Download, Share2 } from "lucide-react";
 import Button from "./Button";
 import { createClient } from "@/utils/supabase/client";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { QuotePDF } from "./QuotePDF";
 
 type Step = "photos" | "description" | "review" | "finalize";
 
@@ -12,17 +14,32 @@ export default function QuoteWizard() {
   const [step, setStep] = useState<Step>("photos");
   const [inputType, setInputType] = useState<"voice" | "text">("voice");
   const [description, setDescription] = useState("");
+  const [clientName, setClientName] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<any[]>([]);
   const [totalHt, setTotalHt] = useState(0);
+  const [profile, setProfile] = useState<any>(null);
+  const [finalizedQuote, setFinalizedQuote] = useState<any>(null);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  async function fetchProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile(data);
+    }
+  }
 
   const nextStep = () => {
     if (step === "photos") setStep("description");
     else if (step === "description") generateQuote();
-    else if (step === "review") setStep("finalize");
+    else if (step === "review") finalizeQuote();
   };
 
   const prevStep = () => {
@@ -32,18 +49,15 @@ export default function QuoteWizard() {
   };
 
   async function generateQuote() {
+    if (!description) return alert("Veuillez décrire les travaux.");
     setLoading(true);
     try {
-      // 1. Récupérer le catalogue de prix de l'utilisateur
       const { data: priceBook } = await supabase.from("price_book").select("*");
-
-      // 2. Appeler l'API OpenRouter
       const response = await fetch("/api/generate-quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description, priceBook }),
       });
-
       const data = await response.json();
       if (data.items) {
         setItems(data.items);
@@ -51,12 +65,41 @@ export default function QuoteWizard() {
         setStep("review");
       }
     } catch (error) {
-      console.error("Erreur génération devis:", error);
-      alert("Une erreur est survenue lors de la génération du devis.");
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
   }
+
+  async function finalizeQuote() {
+    if (!clientName) return alert("Veuillez saisir le nom du client.");
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const quoteData = {
+        user_id: user?.id,
+        client_name: clientName,
+        items,
+        total_ht: totalHt,
+        status: "finalized"
+      };
+
+      const { data, error } = await supabase.from("quotes").insert([quoteData]).select().single();
+      if (!error) {
+        setFinalizedQuote(data);
+        setStep("finalize");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const shareOnWhatsApp = () => {
+    const text = `Bonjour ${clientName}, voici votre devis pour les travaux : ${totalHt}€ HT. Vous pouvez le consulter en pièce jointe.`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -79,118 +122,93 @@ export default function QuoteWizard() {
 
       <AnimatePresence mode="wait">
         {step === "photos" && (
-          <motion.div
-            key="photos"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="glass-card p-12 rounded-3xl text-center"
-          >
+          <motion.div key="photos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card p-12 rounded-3xl text-center">
             <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Camera className="w-10 h-10 text-amber-500" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Prenez des photos du chantier</h2>
-            <p className="text-slate-400 mb-8">Plus l'IA voit de détails, plus le devis sera précis.</p>
-            
+            <h2 className="text-2xl font-bold text-white mb-2">Prenez des photos</h2>
             <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="aspect-square border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-amber-500/50 transition-all">
+              <div className="aspect-square border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-amber-500/50">
                 <Plus className="w-8 h-8 text-white/20 mb-2" />
                 <span className="text-xs text-white/40">Ajouter photo</span>
               </div>
             </div>
-
             <Button onClick={nextStep} className="w-full">Continuer</Button>
           </motion.div>
         )}
 
         {step === "description" && (
-          <motion.div
-            key="description"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="glass-card p-12 rounded-3xl"
-          >
+          <motion.div key="description" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card p-12 rounded-3xl">
             <div className="flex justify-center gap-4 mb-8 p-1 bg-white/5 rounded-xl w-fit mx-auto">
-              <button 
-                onClick={() => setInputType("voice")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${inputType === "voice" ? "bg-amber-500 text-slate-950 font-bold" : "text-white/50 hover:text-white"}`}
-              >
-                <Mic className="w-4 h-4" /> Voix
-              </button>
-              <button 
-                onClick={() => setInputType("text")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${inputType === "text" ? "bg-amber-500 text-slate-950 font-bold" : "text-white/50 hover:text-white"}`}
-              >
-                <Type className="w-4 h-4" /> Texte
-              </button>
+              <button onClick={() => setInputType("voice")} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${inputType === "voice" ? "bg-amber-500 text-slate-950 font-bold" : "text-white/50"}`}><Mic className="w-4 h-4" /> Voix</button>
+              <button onClick={() => setInputType("text")} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${inputType === "text" ? "bg-amber-500 text-slate-950 font-bold" : "text-white/50"}`}><Type className="w-4 h-4" /> Texte</button>
             </div>
-
-            <h2 className="text-2xl font-bold text-white text-center mb-8">Décrivez les travaux</h2>
-
+            <h2 className="text-2xl font-bold text-white text-center mb-8">Description des travaux</h2>
             {inputType === "voice" ? (
               <div className="text-center">
-                <motion.button
-                  animate={isRecording ? { scale: [1, 1.1, 1] } : {}}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  onClick={() => setIsRecording(!isRecording)}
-                  className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-8 transition-all ${isRecording ? "bg-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]" : "bg-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.5)]"}`}
-                >
-                  <Mic className={`w-12 h-12 ${isRecording ? "text-white" : "text-slate-950"}`} />
-                </motion.button>
-                <p className="text-slate-400">{isRecording ? "L'IA vous écoute..." : "Appuyez pour commencer à parler"}</p>
+                <motion.button animate={isRecording ? { scale: [1, 1.1, 1] } : {}} transition={{ repeat: Infinity, duration: 1.5 }} onClick={() => setIsRecording(!isRecording)} className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-8 ${isRecording ? "bg-red-500" : "bg-amber-500"}`}><Mic className="w-12 h-12 text-slate-950" /></motion.button>
               </div>
             ) : (
-              <textarea 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex: Pose de carrelage 60x60, environ 15m2 avec ragréage..."
-                className="w-full h-40 bg-white/5 border border-white/10 rounded-2xl p-6 text-white focus:outline-none focus:border-amber-500 transition-all mb-8"
-              />
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez les travaux..." className="w-full h-40 bg-white/5 border border-white/10 rounded-2xl p-6 text-white mb-8 focus:border-amber-500 outline-none" />
             )}
-
-            <div className="flex gap-4 mt-8">
+            <div className="flex gap-4">
               <Button variant="outline" onClick={prevStep} className="flex-1">Retour</Button>
-              <Button onClick={nextStep} disabled={loading} className="flex-1 gap-2">
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                {loading ? "Génération..." : "Générer le devis"}
+              <Button onClick={nextStep} disabled={loading} className="flex-1">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Générer"}
               </Button>
             </div>
           </motion.div>
         )}
 
         {step === "review" && (
-          <motion.div
-            key="review"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="glass-card p-12 rounded-3xl"
-          >
-            <h2 className="text-2xl font-bold text-white mb-6">Révision des items</h2>
-            <div className="space-y-4 mb-8">
-              {items.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                  <div>
-                    <div className="text-white font-medium">{item.label}</div>
-                    <div className="text-xs text-white/40">{item.qty} {item.unit} x {item.unit_price_ht}€</div>
-                  </div>
-                  <div className="flex items-center gap-4">
+          <motion.div key="review" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card p-12 rounded-3xl">
+            <h2 className="text-2xl font-bold text-white mb-6">Détails du Devis</h2>
+            <div className="mb-8">
+              <input type="text" placeholder="Nom du client" value={clientName} onChange={(e) => setClientName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white mb-6 focus:border-amber-500 outline-none" />
+              <div className="space-y-4">
+                {items.map((item, i) => (
+                  <div key={i} className="flex justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                    <div className="text-white">{item.label}</div>
                     <div className="text-amber-500 font-bold">{item.total_ht || item.qty * item.unit_price_ht}€</div>
-                    <button className="text-white/20 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            
-            <div className="flex justify-between items-center p-6 bg-amber-500/10 rounded-2xl border border-amber-500/20 mb-8">
+            <div className="flex justify-between items-center p-6 bg-amber-500/10 rounded-2xl mb-8">
               <span className="text-white font-bold">Total HT</span>
               <span className="text-2xl font-bold text-amber-500">{totalHt}€</span>
             </div>
-
             <div className="flex gap-4">
               <Button variant="outline" onClick={prevStep} className="flex-1">Retour</Button>
-              <Button onClick={nextStep} className="flex-1">Finaliser</Button>
+              <Button onClick={nextStep} disabled={loading} className="flex-1">Finaliser</Button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === "finalize" && (
+          <motion.div key="finalize" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-12 rounded-3xl text-center">
+            <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="w-10 h-10 text-green-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-2">Devis Finalisé !</h2>
+            <p className="text-slate-400 mb-12">Votre devis a été enregistré avec succès.</p>
+            
+            <div className="flex flex-col gap-4">
+              <PDFDownloadLink document={<QuotePDF quote={finalizedQuote} profile={profile || {}} />} fileName={`Devis_${clientName}.pdf`}>
+                {({ loading }) => (
+                  <Button className="w-full gap-2" disabled={loading}>
+                    <Download className="w-5 h-5" />
+                    {loading ? "Préparation..." : "Télécharger le PDF"}
+                  </Button>
+                )}
+              </PDFDownloadLink>
+              
+              <Button variant="outline" className="w-full gap-2 text-green-500 border-green-500/20" onClick={shareOnWhatsApp}>
+                <Share2 className="w-5 h-5" />
+                Partager sur WhatsApp
+              </Button>
+              
+              <Button variant="ghost" onClick={() => window.location.href = "/"} className="mt-4">Retour à l'accueil</Button>
             </div>
           </motion.div>
         )}
