@@ -7,6 +7,8 @@ import Link from "next/link";
 import { FileText, Calendar, User, ArrowUpRight, Loader2, Plus } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

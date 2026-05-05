@@ -6,6 +6,8 @@ import Button from "@/components/Button";
 import { Plus, Search, Edit2, Trash2, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
+export const dynamic = "force-dynamic";
+
 export default function RatesPage() {
   const [rates, setRates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

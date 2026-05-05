@@ -1,6 +1,8 @@
 import Navbar from "@/components/Navbar";
 import QuoteWizard from "@/components/QuoteWizard";
 
+export const dynamic = "force-dynamic";
+
 export default function CreateQuote() {
   return (
     <main className="relative min-h-screen pt-32 pb-20">

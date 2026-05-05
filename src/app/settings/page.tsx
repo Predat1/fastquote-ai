@@ -6,6 +6,8 @@ import Button from "@/components/Button";
 import { Save, Building2, MapPin, Hash, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
+export const dynamic = "force-dynamic";
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
