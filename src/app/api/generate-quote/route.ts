@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://fastquote-ai.vercel.app", // Facultatif, pour OpenRouter
-    "X-Title": "FastQuote AI",
-  },
-});
-
 export async function POST(req: Request) {
+  const openai = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY,
+    defaultHeaders: {
+      "HTTP-Referer": "https://fastquote-ai.vercel.app",
+      "X-Title": "FastQuote AI",
+    },
+  });
+
   try {
     const { description, priceBook } = await req.json();
 
