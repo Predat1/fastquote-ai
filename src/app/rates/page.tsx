@@ -14,25 +14,26 @@ export default function RatesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [newRate, setNewRate] = useState({ label: "", unit: "m²", price: "", category: "" });
 
-  const supabase = createClient();
-
   useEffect(() => {
+    async function fetchRates() {
+      const supabase = createClient();
+      if (!supabase.from) return;
+
+      const { data, error } = await supabase
+        .from("price_book")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (data) setRates(data);
+      if (error) console.error("Erreur chargement tarifs:", error);
+      setLoading(false);
+    }
+
     fetchRates();
   }, []);
 
-  async function fetchRates() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("price_book")
-      .select("*")
-      .order("created_at", { ascending: false });
-    
-    if (data) setRates(data);
-    if (error) console.error("Erreur chargement tarifs:", error);
-    setLoading(false);
-  }
-
   async function handleAddRate() {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       alert("Veuillez vous connecter pour ajouter un tarif.");

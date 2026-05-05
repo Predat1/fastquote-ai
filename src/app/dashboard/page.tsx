@@ -13,21 +13,24 @@ export default function DashboardPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient();
-
   useEffect(() => {
+    async function fetchQuotes() {
+      const supabase = createClient();
+      
+      // Sécurité si le client n'est pas initialisé (ex: pendant le build)
+      if (!supabase.from) return;
+
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (data) setQuotes(data);
+      setLoading(false);
+    }
+
     fetchQuotes();
   }, []);
-
-  async function fetchQuotes() {
-    const { data, error } = await supabase
-      .from("quotes")
-      .select("*")
-      .order("created_at", { ascending: false });
-    
-    if (data) setQuotes(data);
-    setLoading(false);
-  }
 
   return (
     <main className="relative min-h-screen pt-32 pb-20">

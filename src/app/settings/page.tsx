@@ -17,28 +17,30 @@ export default function SettingsPage() {
     address: "",
   });
 
-  const supabase = createClient();
-
   useEffect(() => {
+    async function fetchProfile() {
+      const supabase = createClient();
+      if (!supabase.auth) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        
+        if (data) setProfile(data);
+      }
+      setLoading(false);
+    }
+
     fetchProfile();
   }, []);
 
-  async function fetchProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      
-      if (data) setProfile(data);
-    }
-    setLoading(false);
-  }
-
   async function handleSave() {
     setSaving(true);
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
