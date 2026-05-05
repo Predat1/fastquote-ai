@@ -22,14 +22,17 @@ export default function Navbar() {
       </Link>
 
       <div className="hidden md:flex items-center gap-8">
+        <Link href="/dashboard" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+          Tableau de bord
+        </Link>
         <Link href="/create" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
           Nouveau Devis
         </Link>
         <Link href="/rates" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
           Mes Tarifs
         </Link>
-        <Link href="/#features" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
-          Fonctionnalités
+        <Link href="/settings" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+          Paramètres
         </Link>
       </div>
 
