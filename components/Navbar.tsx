@@ -22,24 +22,29 @@ export default function Navbar() {
       </Link>
 
       <div className="hidden md:flex items-center gap-8">
-        <Link href="/dashboard" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
-          Tableau de bord
+        <Link href="/dashboard" className="text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:text-primary transition-colors">
+          Dashboard
         </Link>
-        <Link href="/create" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
-          Nouveau Devis
-        </Link>
-        <Link href="/rates" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+        <Link href="/rates" className="text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:text-primary transition-colors">
           Mes Tarifs
         </Link>
-        <Link href="/settings" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+        <Link href="/pricing" className="text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:text-primary transition-colors">
+          Offres
+        </Link>
+        <Link href="/contact" className="text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:text-primary transition-colors">
+          Support
+        </Link>
+        <Link href="/settings" className="text-xs font-black uppercase tracking-[0.2em] text-white/70 hover:text-primary transition-colors">
           Paramètres
         </Link>
       </div>
 
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm">Connexion</Button>
+        <Link href="/login" className="hidden md:block">
+          <Button variant="ghost" size="sm">Connexion</Button>
+        </Link>
         <Link href="/create">
-          <Button size="sm">Essai gratuit</Button>
+          <Button size="sm" className="border-b-2 border-amber-700">Devis Express</Button>
         </Link>
       </div>
     </motion.nav>
