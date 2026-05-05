@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Mic, Type, ArrowRight, ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
+import { Camera, Mic, Type, ArrowRight, ArrowLeft, Check, Plus, Trash2, Loader2 } from "lucide-react";
 import Button from "./Button";
+import { createClient } from "@/utils/supabase/client";
 
 type Step = "photos" | "description" | "review" | "finalize";
 
@@ -12,10 +13,15 @@ export default function QuoteWizard() {
   const [inputType, setInputType] = useState<"voice" | "text">("voice");
   const [description, setDescription] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<any[]>([]);
+  const [totalHt, setTotalHt] = useState(0);
+
+  const supabase = createClient();
 
   const nextStep = () => {
     if (step === "photos") setStep("description");
-    else if (step === "description") setStep("review");
+    else if (step === "description") generateQuote();
     else if (step === "review") setStep("finalize");
   };
 
@@ -24,6 +30,33 @@ export default function QuoteWizard() {
     else if (step === "review") setStep("description");
     else if (step === "finalize") setStep("review");
   };
+
+  async function generateQuote() {
+    setLoading(true);
+    try {
+      // 1. Récupérer le catalogue de prix de l'utilisateur
+      const { data: priceBook } = await supabase.from("price_book").select("*");
+
+      // 2. Appeler l'API OpenRouter
+      const response = await fetch("/api/generate-quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description, priceBook }),
+      });
+
+      const data = await response.json();
+      if (data.items) {
+        setItems(data.items);
+        setTotalHt(data.total_ht);
+        setStep("review");
+      }
+    } catch (error) {
+      console.error("Erreur génération devis:", error);
+      alert("Une erreur est survenue lors de la génération du devis.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -118,7 +151,10 @@ export default function QuoteWizard() {
 
             <div className="flex gap-4 mt-8">
               <Button variant="outline" onClick={prevStep} className="flex-1">Retour</Button>
-              <Button onClick={nextStep} className="flex-1">Générer le devis</Button>
+              <Button onClick={nextStep} disabled={loading} className="flex-1 gap-2">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                {loading ? "Génération..." : "Générer le devis"}
+              </Button>
             </div>
           </motion.div>
         )}
@@ -133,18 +169,14 @@ export default function QuoteWizard() {
           >
             <h2 className="text-2xl font-bold text-white mb-6">Révision des items</h2>
             <div className="space-y-4 mb-8">
-              {[
-                { label: "Dépose ancien carrelage", qty: 15, unit: "m²", price: 25 },
-                { label: "Ragréage autolissant", qty: 15, unit: "m²", price: 18 },
-                { label: "Pose carrelage 60x60", qty: 15, unit: "m²", price: 45 }
-              ].map((item, i) => (
+              {items.map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                   <div>
                     <div className="text-white font-medium">{item.label}</div>
-                    <div className="text-xs text-white/40">{item.qty} {item.unit} x {item.price}€</div>
+                    <div className="text-xs text-white/40">{item.qty} {item.unit} x {item.unit_price_ht}€</div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-amber-500 font-bold">{item.qty * item.price}€</div>
+                    <div className="text-amber-500 font-bold">{item.total_ht || item.qty * item.unit_price_ht}€</div>
                     <button className="text-white/20 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
@@ -153,7 +185,7 @@ export default function QuoteWizard() {
             
             <div className="flex justify-between items-center p-6 bg-amber-500/10 rounded-2xl border border-amber-500/20 mb-8">
               <span className="text-white font-bold">Total HT</span>
-              <span className="text-2xl font-bold text-amber-500">1 320€</span>
+              <span className="text-2xl font-bold text-amber-500">{totalHt}€</span>
             </div>
 
             <div className="flex gap-4">
