@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Button from "@/components/Button";
 import Link from "next/link";
-import { Camera, Mic, FileText, Zap, Shield, Smartphone } from "lucide-react";
+import { Camera, Mic, FileText, Zap, Shield, Smartphone, Check } from "lucide-react";
 
 export default function Home() {
   return (
